@@ -1,10 +1,10 @@
 # Request 002 — Add, Remove and Display Data Sources
 
-**Status:** Complete - awaiting merge decision
+**Status:** Complete and merged
 **Opened:** 2026-09-21
 **Product Owner:** Product Owner
 **Branch:** `feature/002-add-remove-display-data-sources` — created after approval, left unmerged
-**Status of branch:** awaiting merge decision
+**Status of branch:** merged into main on 2026-09-21, branch kept
 
 ---
 
