@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DataCatalog.Core/DataCatalog.Core.csproj" />
+    <Project Path="src/DataCatalog.Infrastructure/DataCatalog.Infrastructure.csproj" />
+    <Project Path="src/DataCatalog.Web/DataCatalog.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DataCatalog.Core.UnitTests/DataCatalog.Core.UnitTests.csproj" />
+    <Project Path="tests/DataCatalog.UiTests/DataCatalog.UiTests.csproj" />
+    <Project Path="tests/DataCatalog.Web.ComponentTests/DataCatalog.Web.ComponentTests.csproj" />
+  </Folder>
+</Solution>

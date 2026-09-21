@@ -27,6 +27,12 @@ Add a new entry every time the PO answers a question that will matter again. Con
 | D-015 | 2026-09-21 | Is a branch required for every feature? | Yes. A branch is created after approval and before the first line of code, named `feature/NNN-short-name` to match its request. Building on `main` is a hard stop. See `docs/BRANCHING.md`. | Active |
 | D-016 | 2026-09-21 | How are naming and architecture governed? | `docs/NAMING_CONVENTIONS.md` governs every name in the project. `docs/ARCHITECTURE.md` is a living document describing the four layers and their one-way dependencies, and must be updated in the same change that alters the structure. Principles P26 and P27. | Active |
 | D-017 | 2026-09-21 | How is each part of the application documented? | Every project, layer, and grouped area carries its own `README.md` from `docs/AREA_GUIDE_TEMPLATE.md`: what it is for, what lives there, how to add to it, what must never be done in it, how it is tested. Created when the area is created, updated in the same change that alters it. Principle P28. | Active |
+| D-018 | 2026-09-21 | What is the catalog called on screen? | **Data Catalog.** Used everywhere: page heading, browser tab, code, tests, glossary. Sensitivity is stored as free text until the district list is settled, which happens when the screen for picking one is built. | Active |
+| D-019 | 2026-09-21 | How are catalog entries stored? | One SQLite file, `datacatalog.db`, in the project folder next to the start file, read and written through Entity Framework Core. Backed up by copying that one file. The file is excluded from version control because it is the district data, not the software. | Active |
+| D-020 | 2026-09-21 | What happens when the catalog file is missing or damaged? | **Missing** - create a new empty one and start normally; this is also the first run. **Damaged** - refuse to start, say where the file is, warn against deleting it, and leave it byte for byte untouched. A test asserts the bytes are unchanged. | Active |
+| D-021 | 2026-09-21 | How does the Product Owner start the catalog? | By double-clicking `Start Data Catalog.cmd` in the project folder. A console window stays open while it runs and closing it stops the catalog. The browser opens by itself. On failure the window stays open with a plain-English message and the technical detail underneath. | Active |
+| D-022 | 2026-09-21 | Is anything validated or required today? | No. Nothing is required, nothing is length-limited, and duplicate names are allowed. Tests record this so that changing it later is a deliberate, approved act rather than a silent one. | Active |
+| D-023 | 2026-09-21 | Is the wording drafted during request 001 without prior approval acceptable? | Yes. The generic "could not start" message and the two console lines shown while the catalog runs are approved wording, on the same footing as everything else: they may not be changed without asking. The rule stands - wording is normally agreed before it is written, and this was flagged rather than absorbed. | Active |
 
 ---
 
@@ -34,5 +40,4 @@ Add a new entry every time the PO answers a question that will matter again. Con
 
 | Question | Why it matters | Waiting on |
 |---|---|---|
-| What should the catalog be called, on screen? | It is the page title and the name staff will use for it | The PO |
 | What are the sensitivity levels, in the district's own words? | One of the seven entry fields; the values must match how the district already talks about data | The PO |
