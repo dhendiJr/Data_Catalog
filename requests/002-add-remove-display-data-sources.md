@@ -1,10 +1,10 @@
 # Request 002 — Add, Remove and Display Data Sources
 
-**Status:** Awaiting approval
+**Status:** Building
 **Opened:** 2026-09-21
 **Product Owner:** Product Owner
 **Branch:** `feature/002-add-remove-display-data-sources` — created after approval, left unmerged
-**Status of branch:** not yet created
+**Status of branch:** building
 
 ---
 
@@ -58,7 +58,7 @@ From `docs/DECISIONS.md`:
 | 16 | What happens when someone opens a link to a data source that is removed, or never existed? | **Removed** — the page still opens, showing everything it held, with a notice at the top and a "Put back" button. No editing until it is put back. **Never existed** — "That data source could not be found" with a link to the list. | 2026-09-21 |
 | 17 | What exactly does the history record, and is it ever cleared? | **Everything, kept forever, newest first.** Records added, each field changed with before and after values, removed, and put back. Shown on the data source's page. Never trimmed — a history that quietly deletes itself is worse than none. | 2026-09-21 |
 | 18 | This changes the shape of the catalog file. Set up migrations now, or recreate while empty? | **Install the reshaping tool (`dotnet-ef`) into the project folder now** and do it properly, while the catalog is provably empty and the change is free. Explicitly approved as a hard-stop exception; recorded in the approval log. | 2026-09-21 |
-| 19 | What happens if saving itself fails? | | 2026-09-21 |
+| 19 | What happens if saving itself fails? | **Say so and keep everything on screen.** A red message with the technical detail underneath; nothing typed is cleared, so pressing Save again works once the problem clears. The unforgivable outcomes — a failure that looks like a success, or one that discards what was written — are both ruled out. | 2026-09-21 |
 
 ---
 
@@ -165,12 +165,14 @@ The largest piece of work so far — five pages, a new layer, a schema change, a
 
 ## Approval
 
-**Approved by:**
-**Date:**
-**Their exact words:**
-**Plan version approved:**
+**Approved by:** Product Owner
+**Date:** 2026-09-21
+**Their exact words:** "approved"
+**Plan version approved:** Version 1 — 2026-09-21
 
-_No text in this section means no code may be written._
+Approving this plan also approves:
+- installing `dotnet-ef` into the project folder, a hard-stop exception under `docs/GUARDRAILS.md` (question 18)
+- the two drafted messages in the error table that were not chosen at question 12
 
 ---
 
