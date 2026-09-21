@@ -8,28 +8,47 @@ Before reporting any work done, compare every `PackageReference` in every `.cspr
 
 ---
 
-## Approved
+## Approved and installed
 
-| # | Package | Version | What it does, in plain English | Licence | Approved by | Date | Request |
-|---|---|---|---|---|---|---|---|
-| 1 | MudBlazor | _pin at install_ | The set of ready-made screen pieces — buttons, tables, forms, menus — that the catalog's pages are built from, so we don't design every control by hand | MIT (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 2 | xunit | _pin at install_ | The framework that runs the automated checks on the project's logic | Apache 2.0 (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 3 | xunit.runner.visualstudio | _pin at install_ | Lets those checks run from `dotnet test` and from Visual Studio | Apache 2.0 (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 4 | Microsoft.NET.Test.Sdk | _pin at install_ | The plumbing .NET needs to run any tests at all | MIT (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 5 | bunit | _pin at install_ | Lets us test individual pieces of a screen quickly, without opening a browser | MIT (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 6 | Microsoft.Playwright | _pin at install_ | Opens the real app in a real browser and clicks through it the way a person would, automatically | MIT (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
-| 7 | Microsoft.Playwright.NUnit _or_ .Xunit | _pin at install_ | Connects the browser tests to the test runner so they run with everything else | MIT (free) | Product Owner | 2026-09-21 | Pre-approved at project setup |
+Versions below are the exact ones pinned in the `.csproj` files as of request 001.
 
-**Note on versions:** the exact version of each founding package is set when the project is first created, and must be written into this table at that moment. Until then, "pin at install" means: pin the exact version in the `.csproj`, then record it here before doing anything else. Never use a floating or "latest" version.
+| # | Package | Version | Where | What it does, in plain English | Licence | Approved by | Date | Request |
+|---|---|---|---|---|---|---|---|---|
+| 1 | MudBlazor | 9.10.0 | Web | The ready-made screen pieces — buttons, tables, forms, menus — the catalog's pages are built from | MIT | Product Owner | 2026-09-21 | Project setup |
+| 2 | Microsoft.EntityFrameworkCore.Sqlite | 10.0.12 | Infrastructure | Reads and writes the catalog file | MIT | Product Owner | 2026-09-21 | 001 |
+| 3 | Microsoft.EntityFrameworkCore.Design | 10.0.12 | Infrastructure | Handles reshaping the catalog file safely when fields are added later | MIT | Product Owner | 2026-09-21 | 001 |
+| 4 | xunit | 2.9.3 | all 3 test projects | Runs the automated checks | Apache 2.0 | Product Owner | 2026-09-21 | Project setup |
+| 5 | xunit.runner.visualstudio | 3.1.4 | all 3 test projects | Lets those checks run from `dotnet test` and Visual Studio | Apache 2.0 | Product Owner | 2026-09-21 | Project setup |
+| 6 | Microsoft.NET.Test.Sdk | 17.14.1 | all 3 test projects | The plumbing .NET needs to run any tests at all | MIT | Product Owner | 2026-09-21 | Project setup |
+| 7 | bunit | 2.11.3 | ComponentTests | Tests individual pieces of a screen without opening a browser | MIT | Product Owner | 2026-09-21 | Project setup |
+| 8 | Microsoft.Playwright | 1.62.0 | UiTests | Opens the real catalog in a real browser and clicks through it automatically | MIT | Product Owner | 2026-09-21 | Project setup |
+
+### Arriving as dependencies of the above
+
+Listed because the policy counts them, not because anything references them directly.
+
+| Package | Version | Comes with | Notes |
+|---|---|---|---|
+| Microsoft.EntityFrameworkCore | 10.0.12 | rows 2 and 3 | The core of Entity Framework |
+| Microsoft.EntityFrameworkCore.Relational | 10.0.12 | row 2 | Shared database plumbing |
+| Microsoft.Data.Sqlite.Core | 10.0.12 | row 2 | The SQLite driver. Used directly in tests to release file locks |
+| SQLitePCLRaw.\* | as resolved by row 2 | row 2 | The native SQLite engine |
+
+**Playwright also downloads a copy of Chromium** the first time the UI tests run. That is browser software, not a NuGet package, and it is stored outside the project in the user's own Playwright cache. It was disclosed in the request 001 plan and approved with it.
 
 ## Requested and declined
 
 | Package | Requested for | Why declined | Decided by | Date |
 |---|---|---|---|---|
-| _none yet_ | | | | |
+| coverlet.collector 6.0.4 | Nothing — added automatically by the `dotnet new xunit` template | Never presented, never approved, and not needed by anything in the plan. Removed from all three test projects at the moment it was noticed, per `docs/DEPENDENCY_POLICY.md` | Agent, under the standing policy | 2026-09-21 |
+| Microsoft.Playwright.NUnit / .Xunit | Connecting browser tests to the test runner | Turned out not to be needed — plain `Microsoft.Playwright` with an xUnit fixture does the job. One package fewer | Agent, under `P24` | 2026-09-21 |
 
 ## Removed
 
 | Package | Why removed | Removed by | Date |
 |---|---|---|---|
-| _none yet_ | | | | |
+| _none yet_ | | | |
+
+## Not installed, and why it matters
+
+`dotnet-ef`, the tool that generates migrations, is **not** installed. Installing software is a hard stop (`docs/GUARDRAILS.md`) and nobody has approved it. The consequence is recorded in `src/DataCatalog.Infrastructure/README.md`: the first field added to a catalog that already holds entries needs that tool approved and the database baselined first.

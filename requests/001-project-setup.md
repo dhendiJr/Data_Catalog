@@ -1,10 +1,10 @@
 # Request 001 — Project Setup
 
-**Status:** Building
+**Status:** Complete - awaiting merge decision
 **Opened:** 2026-09-21
 **Product Owner:** Product Owner
 **Branch:** `feature/001-project-setup` — created after approval, left unmerged
-**Status of branch:** building
+**Status of branch:** awaiting merge decision
 
 ---
 
@@ -190,20 +190,60 @@ Approving this plan also approves the two new packages listed in it (`Microsoft.
 
 ## What was built
 
-_Not started._
+- A repository on this computer, with the rulebook committed on `main` and this work on `feature/001-project-setup`
+- Six projects: `DataCatalog.Core`, `DataCatalog.Infrastructure`, `DataCatalog.Web`, and three test projects
+- The catalog file, its seven fields, and the missing-versus-damaged behavior at startup
+- One page showing the approved heading and status line, built with MudBlazor
+- `Start Data Catalog.cmd` — double-click to run; the window stays open on failure
+- Area guides (`README.md`) for all three source projects and for `tests/`
+- `docs/ARCHITECTURE.md` updated from proposal to description; decisions `D-018` to `D-022` recorded; every package version pinned and written into the ledger
 
 ### Test results
 
 ```
-not run
+dotnet test
+
+Passed!  - Failed: 0, Passed:  4, Skipped: 0, Total:  4 - DataCatalog.Web.ComponentTests.dll (net10.0)
+Passed!  - Failed: 0, Passed: 30, Skipped: 0, Total: 30 - DataCatalog.Core.UnitTests.dll (net10.0)
+Passed!  - Failed: 0, Passed:  4, Skipped: 0, Total:  4 - DataCatalog.UiTests.dll (net10.0)
 ```
+
+38 tests, all passing. The Release build was also started and checked by hand: the page served the approved wording and the catalog file was created.
 
 ### Anything that did not go to plan
 
+1. **An unapproved package appeared.** `dotnet new xunit` added `coverlet.collector` 6.0.4 to all three test projects. Per `docs/DEPENDENCY_POLICY.md` this is a stop; it was removed rather than approved, and recorded in the declined table.
+2. **One fewer package than planned.** `Microsoft.Playwright.NUnit/.Xunit` turned out to be unnecessary — plain `Microsoft.Playwright` with an xUnit fixture works. Not installed.
+3. **Two tests failed during the work.** One was the test's own plumbing (SQLite keeps the file locked after disposal). The other was a real defect the test caught: `MudText Component="h1"` compiles but silently becomes a stray HTML attribute, leaving the page with no heading. Fixed with `HtmlTag="h1"`. No test was weakened.
+4. **Migrations are not set up.** Generating them needs the `dotnet-ef` tool, and installing software is a hard stop nobody approved. The schema is created directly instead. `Microsoft.EntityFrameworkCore.Design` is installed and ready. Consequence recorded in `src/DataCatalog.Infrastructure/README.md`.
+5. **Wording written without explicit approval** — needs confirming:
+   - the generic "could not start" message, for failures other than the two that were worded at Q13
+   - two console lines while running: "Data Catalog is running at <address>" and "Close this window to stop it."
+6. **`UseHttpsRedirection` was removed** from the template's startup code. The catalog serves plain HTTP on localhost only, so the redirect had nowhere to send anyone.
+
 ### Noticed while building
+
+Not acted on. Each would be its own request.
+
+- **The edit history required by `D-005` has no home yet.** With no logins, it is the only way to see who changed what.
+- **Nothing is validated.** Blank entries save, duplicate names are allowed, no field has a length limit. Tests record this as today's truth rather than as a decision.
+- **The error and not-found pages still carry template wording** the Product Owner has never seen or approved.
+- **Migration baseline** must be sorted before the first field is added to a catalog that already holds entries.
 
 ---
 
 ## Definition of Done checklist
 
-_To be copied from `docs/DEFINITION_OF_DONE.md` when the work is complete._
+**Approval** — plan on disk, approval block filled in, logged in `approvals/APPROVAL_LOG.md`, built what was approved. Divergences listed above rather than absorbed silently.
+
+**Packages** — every `PackageReference` in every `.csproj` checked against the ledger; all eight match, with exact versions recorded.
+
+**The feature** — starts, shows the approved wording, creates a missing file, refuses on a damaged one and leaves it untouched.
+
+**Tests** — 30 unit, 4 component, 4 browser. Two were seen failing before passing. No existing test changed, skipped, or relaxed. Whole suite run, not just the new tests.
+
+**Reporting** — actual output shown, including the two failures encountered on the way.
+
+**Record** — `D-018` to `D-022` recorded, architecture updated, four area guides written, this file complete, out-of-scope items listed not acted on.
+
+**Branch** — `feature/001-project-setup`, unmerged, waiting on the Product Owner (`D-014`).

@@ -38,28 +38,39 @@ Because of `D-005` — no logins, anyone can edit — the catalog needs an edit 
 ## Folder structure
 
 ```
+DataCatalog.slnx               the solution
+Start Data Catalog.cmd         what the Product Owner double-clicks
+datacatalog.db                 the catalog file - their data, kept out of version control
 src/
-  DataCatalog.Core/            models, services, repository interfaces — no UI, no storage
-    Models/
-    Services/
-    Abstractions/              the interfaces repositories implement
-  DataCatalog.Infrastructure/  the concrete repositories and storage
+  DataCatalog.Core/            models, rules, interfaces - no UI, no storage, no packages
+    Models/                    CatalogEntry: the seven fields of D-010
+    Abstractions/              ICatalogRepository
+    Text/                      wording the Product Owner approved, word for word
+    README.md
+  DataCatalog.Infrastructure/  the catalog file and how it is read and written
+    CatalogDbContext.cs        the shape of the file
+    SqliteCatalogRepository.cs implements ICatalogRepository
+    CatalogDatabase.cs         missing file versus damaged file, at startup
+    README.md
   DataCatalog.Web/             the Blazor Server app
     Components/
       Layout/
-      Catalog/                 grouped by area, each with its own README.md
-    Pages/
-    Program.cs                 dependency injection registrations
+      Pages/                   Home.razor - the only page today
+    Program.cs                 startup, dependency injection, every failure path
+    README.md
 tests/
-  DataCatalog.Core.UnitTests/         xUnit — rules and logic
-  DataCatalog.Web.ComponentTests/     bUnit — components without a browser
-  DataCatalog.UiTests/                Playwright — the real app in a browser
+  DataCatalog.Core.UnitTests/         xUnit - rules, wording, storage round-trips
+  DataCatalog.Web.ComponentTests/     bUnit - components without a browser
+  DataCatalog.UiTests/                Playwright - the real app in a real browser
+  README.md
 docs/                          the rulebook
 approvals/                     signed approvals
 requests/                      one file per request
 ```
 
-**This structure is a proposal until request 001 is approved.** It is written here so the plan for 001 has something concrete to agree or disagree with — not because it is settled.
+**This is what exists, built and tested under request 001.** Each project carries its own `README.md` explaining how to work in it.
+
+Note that `DataCatalog.Core.UnitTests` also holds the storage round-trip tests, which use a real temporary file and therefore reach into `DataCatalog.Infrastructure`. Strictly they are not unit tests. A fourth test project would buy nothing today, so the name promises slightly less than it delivers — recorded here rather than left to be discovered.
 
 ## Dependency injection
 
@@ -67,16 +78,27 @@ Everything crosses layers through interfaces registered in `Program.cs`. Compone
 
 This is the single most load-bearing decision in the project. It is what lets bUnit test a component with a fake repository and no database, and it is why adding a second storage mechanism later would not require touching a single component.
 
-## Still open — decide in request 001, do not assume
+## How entries are stored
 
-These are genuinely undecided. An agent that picks one without asking has violated `P1`.
+One SQLite file, `datacatalog.db`, sitting in the project folder next to the start file, read and written through Entity Framework Core (`D-019`). One table, `CatalogEntries`, holding the seven fields of `D-010` plus an id.
+
+The file is deliberately excluded from version control. It is the district's data, not the software — which means **backing it up is copying that one file**, and nothing else does it for them.
+
+At startup (`D-020`):
+
+- **File missing** — a new empty one is created and the catalog starts. This is also the very first run.
+- **File damaged** — the catalog refuses to start, says where the file is, warns against deleting it, and leaves it byte for byte untouched. A test asserts the bytes are unchanged, because the failure that matters here is silent replacement.
+
+Today nothing is required and nothing is validated. Validation is a rule for a later request, and the tests record what is true now rather than what someone assumes.
+
+## Still open — do not assume
 
 | Open question | Why it matters |
 |---|---|
-| **How entries are stored** — a database file, a plain file, something else | Shapes the Infrastructure layer entirely |
-| **How the edit history is kept** (required by `D-005`) | May change the shape of the stored data |
-| **Whether Core and Infrastructure are separate projects** or one to start with | Simpler is not always fewer projects, but often is |
-| **How the app is started** by the PO on their computer | Affects what request 001 must deliver |
+| **How the edit history is kept** (required by `D-005`) | Nothing records changes yet. The storage has room for it; the shape is undecided |
+| **The district's sensitivity levels** | Stored as free text until then (`D-018`) |
+| **Whether duplicate names are allowed** | Today they are, and a test records that. Nobody has decided they should be |
+| **Migrations** | The schema is created directly rather than through migrations, because generating them needs a tool nobody has approved installing. See `src/DataCatalog.Infrastructure/README.md` |
 
 Record each answer in `docs/DECISIONS.md` and update this file in the same change.
 
