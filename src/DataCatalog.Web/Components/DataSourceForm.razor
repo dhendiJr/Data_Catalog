@@ -1,0 +1,206 @@
+@using DataCatalog.Core.Models
+
+@*
+    The one form, used for both adding and editing, so the two can never drift apart.
+    It shows things and collects typing. It decides nothing: whether a name is missing
+    or a duplicate is CatalogService's answer, handed back in through the parameters.
+*@
+
+<NavigationLock ConfirmExternalNavigation="@HasSomethingTyped"
+                OnBeforeInternalNavigation="ConfirmLeavingAsync" />
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudTextField @bind-Value="Entry.Name"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.Name)"
+                      Immediate="true"
+                      Error="@(NameError is not null)"
+                      ErrorText="@NameError" />
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudTextField @bind-Value="Entry.Description"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.Description)"
+                      Lines="4"
+                      AutoGrow="true"
+                      Immediate="true" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField @bind-Value="Entry.SourceSystem"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.SourceSystem)"
+                      Immediate="true" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField @bind-Value="Entry.Owner"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.Owner)"
+                      Immediate="true" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField @bind-Value="Entry.Contact"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.Contact)"
+                      Immediate="true" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField @bind-Value="Entry.Sensitivity"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.Sensitivity)"
+                      Immediate="true" />
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudTextField @bind-Value="Entry.UpdateFrequency"
+                      @bind-Value:after="NoteTyping"
+                      Label="@PageText.LabelFor(CatalogField.UpdateFrequency)"
+                      Immediate="true" />
+    </MudItem>
+</MudGrid>
+
+@if (DuplicateOf is not null)
+{
+    @* These two are read into local values on purpose. What is inside MudAlert is not
+       drawn at this moment - MudAlert draws it later, as part of its own drawing, and by
+       then the warning may have been cleared and DuplicateOf set back to nothing. Reading
+       it directly inside the alert crashes the page the instant Save anyway is pressed. *@
+    var whereTheExistingOneIs = $"/data-sources/{DuplicateOf.Id}";
+    var whatToSay = PageText.DuplicateName(Entry.Name);
+
+    <MudAlert Severity="Severity.Warning" Class="mt-4">
+        <MudText>@whatToSay</MudText>
+        <MudLink Href="@whereTheExistingOneIs" Class="mr-4">@PageText.ViewIt</MudLink>
+        <MudButton Variant="Variant.Text" OnClick="SaveAnywayAsync">@PageText.SaveAnyway</MudButton>
+    </MudAlert>
+}
+
+@if (SaveFailure is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">
+        <MudText>@PageText.CouldNotSave</MudText>
+        <MudText Typo="Typo.caption">@SaveFailure</MudText>
+    </MudAlert>
+}
+
+<MudStack Row="true" Class="mt-6" Spacing="2">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">@SaveButtonText</MudButton>
+    <MudButton Variant="Variant.Text" OnClick="CancelAsync">@PageText.Cancel</MudButton>
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired] public CatalogEntry Entry { get; set; } = new();
+
+    [Parameter, EditorRequired] public string SaveButtonText { get; set; } = PageText.Save;
+
+    /// <summary>The message under the name box, when the service says the name is missing.</summary>
+    [Parameter] public string? NameError { get; set; }
+
+    /// <summary>The data source that already has this name, when the service found one.</summary>
+    [Parameter] public CatalogEntry? DuplicateOf { get; set; }
+
+    /// <summary>The technical detail of a failed save, shown under the plain-English message.</summary>
+    [Parameter] public string? SaveFailure { get; set; }
+
+    [Parameter] public EventCallback OnSave { get; set; }
+
+    [Parameter] public EventCallback OnSaveAnyway { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Inject] private IDialogService Dialogs { get; set; } = default!;
+
+    private bool _somethingWasTyped;
+
+    /// <summary>
+    /// Set when the person has already decided to leave - by saving, or by answering the
+    /// discard question. Without it, the page that moves on after a successful save can
+    /// find its own navigation questioned, and the person is stuck on a form they have
+    /// already saved.
+    /// </summary>
+    private bool _leavingOnPurpose;
+
+    /// <summary>
+    /// True once anything has been typed. Used to decide whether leaving needs a question
+    /// (Q15) - a form nobody has touched should never argue with the person leaving it.
+    /// </summary>
+    public bool HasSomethingTyped => _somethingWasTyped;
+
+    private void NoteTyping() => _somethingWasTyped = true;
+
+    private async Task SaveAsync()
+    {
+        _somethingWasTyped = false;
+        _leavingOnPurpose = true;
+
+        try
+        {
+            await OnSave.InvokeAsync();
+        }
+        finally
+        {
+            _leavingOnPurpose = false;
+        }
+    }
+
+    private async Task SaveAnywayAsync()
+    {
+        _somethingWasTyped = false;
+        _leavingOnPurpose = true;
+
+        try
+        {
+            await OnSaveAnyway.InvokeAsync();
+        }
+        finally
+        {
+            _leavingOnPurpose = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        if (!await MayThrowAwayTypingAsync())
+        {
+            return;
+        }
+
+        _somethingWasTyped = false;
+        _leavingOnPurpose = true;
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task ConfirmLeavingAsync(LocationChangingContext context)
+    {
+        if (_leavingOnPurpose || !_somethingWasTyped)
+        {
+            return;
+        }
+
+        if (!await MayThrowAwayTypingAsync())
+        {
+            context.PreventNavigation();
+        }
+    }
+
+    private async Task<bool> MayThrowAwayTypingAsync()
+    {
+        if (!_somethingWasTyped)
+        {
+            return true;
+        }
+
+        var answer = await Dialogs.ShowMessageBoxAsync(
+            PageText.DiscardHeading,
+            PageText.DiscardQuestion,
+            yesText: PageText.Discard,
+            cancelText: PageText.KeepEditing);
+
+        return answer == true;
+    }
+}

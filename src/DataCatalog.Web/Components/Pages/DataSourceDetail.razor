@@ -1,0 +1,144 @@
+@page "/data-sources/{Id:int}"
+@using DataCatalog.Core.Models
+@using DataCatalog.Core.Services
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+@inject IDialogService Dialogs
+
+@* One data source: all seven fields and everything that has happened to it. *@
+
+<PageTitle>@(_entry?.Name ?? PageText.CatalogName)</PageTitle>
+
+@if (_notFound)
+{
+    <MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-4">@PageText.CouldNotBeFound</MudText>
+    <MudLink Href="/">@PageText.BackToAllDataSources</MudLink>
+}
+else if (_entry is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    @if (_entry.IsRemoved)
+    {
+        @* A removed data source still opens, so a bookmark stays useful (002 Q16). *@
+        <MudAlert Severity="Severity.Info" Class="mb-4">@PageText.RemovedNotice</MudAlert>
+    }
+
+    <MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-6">@_entry.Name</MudText>
+
+    <MudStack Row="true" Spacing="2" Class="mb-6">
+        @if (_entry.IsRemoved)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="PutBackAsync">@PageText.PutBack</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Href="@($"/data-sources/{Id}/edit")">@PageText.Edit</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RemoveAsync">@PageText.Remove</MudButton>
+        }
+        <MudLink Href="/" Class="align-self-center">@PageText.BackToAllDataSources</MudLink>
+    </MudStack>
+
+    <MudPaper Class="pa-4 mb-6" Elevation="0" Outlined="true">
+        @foreach (var field in EveryField)
+        {
+            <MudText Typo="Typo.caption">@PageText.LabelFor(field)</MudText>
+            <MudText Typo="Typo.body1" Class="mb-3">@PageText.OrNotRecorded(ValueOf(field))</MudText>
+        }
+    </MudPaper>
+
+    <MudText Typo="Typo.h5" HtmlTag="h2" Class="mb-3">@PageText.History</MudText>
+
+    @if (_history is null || _history.Count == 0)
+    {
+        <MudText Typo="Typo.body2">@PageText.NotRecordedYet</MudText>
+    }
+    else
+    {
+        @* A plain list rather than MudList: this is text to read, not a menu to
+           navigate, so the keyboard handling MudList brings would be machinery
+           nobody asked for. *@
+        <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+            @foreach (var change in _history)
+            {
+                <MudText Typo="Typo.body2" Class="mb-2">
+                    @WhenItHappened(change) — @PageText.DescribeChange(change)
+                </MudText>
+            }
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CatalogEntry? _entry;
+    private IReadOnlyList<CatalogChange>? _history;
+    private bool _notFound;
+
+    private static readonly CatalogField[] EveryField =
+    [
+        CatalogField.Name,
+        CatalogField.Description,
+        CatalogField.SourceSystem,
+        CatalogField.Owner,
+        CatalogField.Contact,
+        CatalogField.Sensitivity,
+        CatalogField.UpdateFrequency
+    ];
+
+    protected override async Task OnParametersSetAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _entry = await Catalog.GetAsync(Id);
+        _notFound = _entry is null;
+
+        if (_entry is not null)
+        {
+            _history = await Catalog.GetHistoryAsync(Id);
+        }
+    }
+
+    private string ValueOf(CatalogField field) => field switch
+    {
+        CatalogField.Name => _entry!.Name,
+        CatalogField.Description => _entry!.Description,
+        CatalogField.SourceSystem => _entry!.SourceSystem,
+        CatalogField.Owner => _entry!.Owner,
+        CatalogField.Contact => _entry!.Contact,
+        CatalogField.Sensitivity => _entry!.Sensitivity,
+        CatalogField.UpdateFrequency => _entry!.UpdateFrequency,
+        _ => string.Empty
+    };
+
+    private static string WhenItHappened(CatalogChange change) =>
+        change.RecordedAt.ToLocalTime().ToString("d MMMM yyyy, h:mmtt").ToLowerInvariant();
+
+    private async Task RemoveAsync()
+    {
+        var confirmed = await Dialogs.ShowMessageBoxAsync(
+            PageText.Remove,
+            PageText.ConfirmRemove(_entry!.Name),
+            yesText: PageText.Remove,
+            cancelText: PageText.KeepIt);
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await Catalog.RemoveAsync(Id);
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task PutBackAsync()
+    {
+        await Catalog.PutBackAsync(Id);
+        await LoadAsync();
+    }
+}

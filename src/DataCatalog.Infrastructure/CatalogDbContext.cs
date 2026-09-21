@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 namespace DataCatalog.Infrastructure;
 
 /// <summary>
-/// The shape of the catalog file. One table, the seven fields of D-010 plus an id.
+/// The shape of the catalog file: the data sources, and everything that has happened
+/// to them.
 /// </summary>
 public class CatalogDbContext : DbContext
 {
@@ -14,6 +15,8 @@ public class CatalogDbContext : DbContext
 
     public DbSet<CatalogEntry> Entries => Set<CatalogEntry>();
 
+    public DbSet<CatalogChange> Changes => Set<CatalogChange>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var entry = modelBuilder.Entity<CatalogEntry>();
@@ -21,9 +24,9 @@ public class CatalogDbContext : DbContext
         entry.ToTable("CatalogEntries");
         entry.HasKey(e => e.Id);
 
-        // No maximum lengths and no required fields. Validation is a rule for a later
-        // request; today the storage accepts whatever it is given so that nothing is
-        // silently rejected before the Product Owner has decided the rules (P24).
+        // No maximum lengths and nothing required at this level. The one rule that exists -
+        // a data source must have a name - is enforced in CatalogService, where it can be
+        // tested without a database and where the person gets a sentence rather than a crash.
         entry.Property(e => e.Name);
         entry.Property(e => e.Description);
         entry.Property(e => e.SourceSystem);
@@ -31,5 +34,17 @@ public class CatalogDbContext : DbContext
         entry.Property(e => e.Contact);
         entry.Property(e => e.Sensitivity);
         entry.Property(e => e.UpdateFrequency);
+        entry.Property(e => e.IsRemoved);
+
+        var change = modelBuilder.Entity<CatalogChange>();
+
+        change.ToTable("CatalogChanges");
+        change.HasKey(c => c.Id);
+        change.Property(c => c.CatalogEntryId);
+        change.Property(c => c.RecordedAt);
+        change.Property(c => c.Kind).HasConversion<int>();
+        change.Property(c => c.Field).HasConversion<int?>();
+        change.Property(c => c.OldValue);
+        change.Property(c => c.NewValue);
     }
 }

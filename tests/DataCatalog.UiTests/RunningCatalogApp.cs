@@ -23,11 +23,18 @@ public sealed class RunningCatalogApp : IAsyncLifetime
             Path.GetTempPath(),
             $"datacatalog-uitest-{Guid.NewGuid():N}.db");
 
-        var catalogDll = LocateBuiltCatalog();
+        var catalogProject = LocateTheCatalogProject();
 
-        var startInfo = new ProcessStartInfo("dotnet", $"exec \"{catalogDll}\"")
+        // Started with "dotnet run", the same way the Product Owner's start file does it,
+        // rather than by running the built file directly. That is not fussiness: running
+        // the built file skips the step that serves MudBlazor's own JavaScript, so the
+        // catalog looks right, accepts typing, and then dies the moment a button is
+        // pressed. Testing it the way it is actually run is the only way to catch that.
+        var startInfo = new ProcessStartInfo(
+            "dotnet",
+            $"run --project \"{catalogProject}\" --configuration Debug --no-build")
         {
-            WorkingDirectory = Path.GetDirectoryName(catalogDll)!,
+            WorkingDirectory = Path.GetDirectoryName(catalogProject)!,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true
@@ -39,6 +46,13 @@ public sealed class RunningCatalogApp : IAsyncLifetime
 
         _catalogProcess = Process.Start(startInfo)
             ?? throw new InvalidOperationException("The catalog process did not start.");
+
+        // Keep everything the catalog says. When a browser test fails because something
+        // went wrong on the server, this is the only place the real reason appears.
+        _catalogProcess.OutputDataReceived += RecordLine;
+        _catalogProcess.ErrorDataReceived += RecordLine;
+        _catalogProcess.BeginOutputReadLine();
+        _catalogProcess.BeginErrorReadLine();
 
         await WaitUntilTheCatalogAnswersAsync();
     }
@@ -71,10 +85,8 @@ public sealed class RunningCatalogApp : IAsyncLifetime
         {
             if (_catalogProcess is { HasExited: true })
             {
-                var output = await _catalogProcess.StandardOutput.ReadToEndAsync();
-                var errors = await _catalogProcess.StandardError.ReadToEndAsync();
                 throw new InvalidOperationException(
-                    $"The catalog stopped before it was ready.{Environment.NewLine}{output}{Environment.NewLine}{errors}");
+                    $"The catalog stopped before it was ready.{Environment.NewLine}{WhatTheCatalogSaid()}");
             }
 
             try
@@ -96,6 +108,33 @@ public sealed class RunningCatalogApp : IAsyncLifetime
         throw new TimeoutException($"The catalog did not answer at {Address} within 90 seconds.");
     }
 
+    private readonly System.Text.StringBuilder _whatTheCatalogSaid = new();
+
+    private void RecordLine(object sender, DataReceivedEventArgs line)
+    {
+        if (line.Data is null)
+        {
+            return;
+        }
+
+        lock (_whatTheCatalogSaid)
+        {
+            _whatTheCatalogSaid.AppendLine(line.Data);
+        }
+    }
+
+    /// <summary>
+    /// Everything the catalog has written. Use it in a failing test to find out what went
+    /// wrong on the server, rather than guessing from what the browser was left showing.
+    /// </summary>
+    public string WhatTheCatalogSaid()
+    {
+        lock (_whatTheCatalogSaid)
+        {
+            return _whatTheCatalogSaid.ToString();
+        }
+    }
+
     private static int FindAFreePort()
     {
         using var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -105,7 +144,7 @@ public sealed class RunningCatalogApp : IAsyncLifetime
         return port;
     }
 
-    private static string LocateBuiltCatalog()
+    private static string LocateTheCatalogProject()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
@@ -119,15 +158,14 @@ public sealed class RunningCatalogApp : IAsyncLifetime
             throw new InvalidOperationException("Could not find the project folder from the test assembly.");
         }
 
-        var catalogDll = Path.Combine(
-            directory.FullName, "src", "DataCatalog.Web", "bin", "Debug", "net10.0", "DataCatalog.Web.dll");
+        var catalogProject = Path.Combine(
+            directory.FullName, "src", "DataCatalog.Web", "DataCatalog.Web.csproj");
 
-        if (!File.Exists(catalogDll))
+        if (!File.Exists(catalogProject))
         {
-            throw new InvalidOperationException(
-                $"The catalog has not been built. Expected it at {catalogDll}. Run dotnet build first.");
+            throw new InvalidOperationException($"Expected the catalog project at {catalogProject}.");
         }
 
-        return catalogDll;
+        return catalogProject;
     }
 }

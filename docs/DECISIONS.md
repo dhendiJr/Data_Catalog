@@ -33,6 +33,17 @@ Add a new entry every time the PO answers a question that will matter again. Con
 | D-021 | 2026-09-21 | How does the Product Owner start the catalog? | By double-clicking `Start Data Catalog.cmd` in the project folder. A console window stays open while it runs and closing it stops the catalog. The browser opens by itself. On failure the window stays open with a plain-English message and the technical detail underneath. | Active |
 | D-022 | 2026-09-21 | Is anything validated or required today? | No. Nothing is required, nothing is length-limited, and duplicate names are allowed. Tests record this so that changing it later is a deliberate, approved act rather than a silent one. | Active |
 | D-023 | 2026-09-21 | Is the wording drafted during request 001 without prior approval acceptable? | Yes. The generic "could not start" message and the two console lines shown while the catalog runs are approved wording, on the same footing as everything else: they may not be changed without asking. The rule stands - wording is normally agreed before it is written, and this was flagged rather than absorbed. | Active |
+| D-024 | 2026-09-21 | Which fields must be filled in? | **Name only.** Blank or spaces-only is refused with "Please give this data source a name" under the box; everything else the person typed stays. Other fields display as "Not recorded yet" when empty, so a gap looks like a gap. | Active |
+| D-025 | 2026-09-21 | What happens on a duplicate name? | Warn, but allow. The warning offers a link to the existing one and a "Save anyway" button. Comparison ignores case and surrounding spaces. **Removed data sources do not count as duplicates** - something off the list is not one a person would find. | Active |
+| D-026 | 2026-09-21 | Is removal permanent? | No. Removing hides a data source from the list and nothing is destroyed. A "Removed data sources" page lists them with "Put back". Confirmation wording is fixed; the buttons are "Remove" and "Keep it", never "Cancel". **Nothing in this project ever deletes a catalog entry outright.** | Active |
+| D-027 | 2026-09-21 | What does the change history record? | Added, every field change with its before and after value, removed, and put back - each with the date and time. No "who", because there are no logins (D-005). Newest first on the data source's page. **Never trimmed.** Recorded from the first entry onward, because history not captured is lost permanently. | Active |
+| D-028 | 2026-09-21 | Two people editing the same entry at once? | Last save wins, silently. Safe today because the history preserves the overwritten values and the catalog runs on one computer. **Must be revisited before the catalog is ever put on a server**, where it would mean people silently overwriting each other. | Active |
+| D-029 | 2026-09-21 | How are data sources shown? | The list shows name, system, owner, sensitivity, sorted by name ignoring case. Clicking one opens its own page with all seven fields, its history, and Edit and Remove. Description is deliberately not a column. | Active |
+| D-030 | 2026-09-21 | How do people move between pages? | A menu that slides out from a button at the top, holding "Data sources" and "Removed data sources". | Active |
+| D-031 | 2026-09-21 | What happens to half-typed work? | Leaving a form with something typed asks first, offering "Keep editing" or "Discard". A form nobody has touched leaves without comment. Applies to Cancel and to navigating away. | Active |
+| D-032 | 2026-09-21 | Links to things that are gone? | A **removed** data source still opens, showing everything it held, with a notice and a "Put back" button, and cannot be edited until it is back. A link to something that **never existed** says "That data source could not be found" with a link to the list. | Active |
+| D-033 | 2026-09-21 | Is there search? | Not yet. The list shows everything. Search becomes its own request once there is enough to search through. | Active |
+| D-034 | 2026-09-21 | How is the catalog file reshaped? | Through Entity Framework migrations, using the project-local `dotnet-ef` tool approved at request 002 Q18. The first migration, `InitialCatalog`, creates both tables. A catalog file left over from request 001 predates migrations: if it is provably empty it is rebuilt automatically, and if it holds anything the catalog refuses to start rather than risk it. | Active |
 
 ---
 
@@ -40,4 +51,7 @@ Add a new entry every time the PO answers a question that will matter again. Con
 
 | Question | Why it matters | Waiting on |
 |---|---|---|
-| What are the sensitivity levels, in the district's own words? | One of the seven entry fields; the values must match how the district already talks about data | The PO |
+| What are the sensitivity levels, in the district own words? | One of the seven entry fields; stored as free text until then (D-018) | The PO |
+| Should two people editing at once be warned? | Today the last save quietly wins (D-028). Harmless on one computer, not on a server | Revisit before any move off this computer |
+| Should duplicate names be blocked rather than warned about? | Today they are allowed (D-025). Worth revisiting once there are enough entries to see whether it causes confusion | The PO |
+| Search and filtering | Deferred at D-033 until there is enough to search | The PO |

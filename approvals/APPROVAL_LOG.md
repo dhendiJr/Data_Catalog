@@ -16,5 +16,6 @@ Add a row the moment approval is given — before starting the work, not after f
 | 6 | 2026-09-21 | Merging `feature/001-project-setup` into `main` | Guardrail | Product Owner | "merge it" | `requests/001-project-setup.md` |
 | 7 | 2026-09-21 | Request 002 plan, version 1 — add, display, edit and remove data sources | Plan | Product Owner | "approved" | `requests/002-add-remove-display-data-sources.md` |
 | 8 | 2026-09-21 | Installing the `dotnet-ef` tool into the project folder — an explicit exception to the hard stop on installing software | Guardrail | Product Owner | Approved at request 002, question 18 | `approvals/PACKAGE_APPROVALS.md` |
+| 9 | 2026-09-21 | Merging `feature/002-add-remove-display-data-sources` into `main` | Guardrail | Product Owner | "merge it" | `requests/002-add-remove-display-data-sources.md` |
 
 **Types:** `Plan` · `Packages` · `Guardrail` · `Setup`

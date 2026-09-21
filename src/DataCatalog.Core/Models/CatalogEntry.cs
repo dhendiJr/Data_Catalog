@@ -35,4 +35,11 @@ public class CatalogEntry
 
     /// <summary>How often it changes - live, nightly, weekly, once a year.</summary>
     public string UpdateFrequency { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Taken off the list but not destroyed. Removing is always recoverable (request 002,
+    /// Q8): with no logins, one bad day could otherwise empty the catalog with no way to
+    /// tell what was lost. Nothing in this project ever deletes a catalog entry outright.
+    /// </summary>
+    public bool IsRemoved { get; set; }
 }

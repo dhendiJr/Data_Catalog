@@ -5,8 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace DataCatalog.Infrastructure;
 
 /// <summary>
-/// Reads and writes catalog entries in the catalog file. Holds no business rules -
-/// those belong in services (docs/ARCHITECTURE.md).
+/// Reads and writes catalog entries and their history in the catalog file. Holds no
+/// rules: it does not know what "removed" means, does not sort, and does not decide
+/// what is allowed. That is CatalogService's job (docs/ARCHITECTURE.md).
 /// </summary>
 public class SqliteCatalogRepository : ICatalogRepository
 {
@@ -37,5 +38,30 @@ public class SqliteCatalogRepository : ICatalogRepository
         _context.Entries.Add(entry);
         await _context.SaveChangesAsync(cancellationToken);
         return entry;
+    }
+
+    public async Task UpdateAsync(CatalogEntry entry, CancellationToken cancellationToken = default)
+    {
+        // Entries are read without tracking, so what arrives here is a detached object.
+        _context.Entries.Update(entry);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddChangesAsync(
+        IEnumerable<CatalogChange> changes,
+        CancellationToken cancellationToken = default)
+    {
+        _context.Changes.AddRange(changes);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CatalogChange>> GetChangesAsync(
+        int catalogEntryId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Changes
+            .AsNoTracking()
+            .Where(change => change.CatalogEntryId == catalogEntryId)
+            .ToListAsync(cancellationToken);
     }
 }

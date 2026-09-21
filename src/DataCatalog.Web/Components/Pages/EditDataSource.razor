@@ -1,0 +1,102 @@
+@page "/data-sources/{Id:int}/edit"
+@using DataCatalog.Core.Models
+@using DataCatalog.Core.Services
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+@* Correcting a data source. Every field that changes is recorded (002 Q9, Q17). *@
+
+<PageTitle>@PageText.EditHeadingPrefix</PageTitle>
+
+@if (_notFound)
+{
+    <MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-4">@PageText.CouldNotBeFound</MudText>
+    <MudLink Href="/">@PageText.BackToAllDataSources</MudLink>
+}
+else if (_entry is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-6">@PageText.EditHeadingPrefix @_originalName</MudText>
+
+    <DataSourceForm Entry="_entry"
+                    SaveButtonText="@PageText.SaveChanges"
+                    NameError="@_nameError"
+                    DuplicateOf="_duplicateOf"
+                    SaveFailure="@_saveFailure"
+                    OnSave="() => SaveAsync(saveAnyway: false)"
+                    OnSaveAnyway="() => SaveAsync(saveAnyway: true)"
+                    OnCancel="GoBackToTheDataSource" />
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CatalogEntry? _entry;
+    private string _originalName = string.Empty;
+    private bool _notFound;
+
+    private string? _nameError;
+    private CatalogEntry? _duplicateOf;
+    private string? _saveFailure;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var found = await Catalog.GetAsync(Id);
+
+        // A removed data source cannot be edited until it is put back (002 Q16).
+        if (found is null || found.IsRemoved)
+        {
+            _notFound = found is null;
+
+            if (found is not null)
+            {
+                Navigation.NavigateTo($"/data-sources/{Id}");
+            }
+
+            return;
+        }
+
+        _originalName = found.Name;
+        _entry = found;
+    }
+
+    private async Task SaveAsync(bool saveAnyway)
+    {
+        _nameError = null;
+        _duplicateOf = null;
+        _saveFailure = null;
+
+        SaveResult result;
+
+        // Only the saving is guarded - see the note on the same method in AddDataSource.
+        try
+        {
+            result = await Catalog.UpdateAsync(_entry!, saveAnyway);
+        }
+        catch (Exception failure)
+        {
+            _saveFailure = failure.Message;
+            return;
+        }
+
+        switch (result.Problem)
+        {
+            case SaveProblem.NameMissing:
+                _nameError = PageText.NameRequired;
+                return;
+
+            case SaveProblem.DuplicateName:
+                _duplicateOf = result.ExistingWithSameName;
+                return;
+        }
+
+        Snackbar.Add(PageText.Saved, Severity.Success);
+        GoBackToTheDataSource();
+    }
+
+    private void GoBackToTheDataSource() => Navigation.NavigateTo($"/data-sources/{Id}");
+}

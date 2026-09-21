@@ -1,11 +1,54 @@
 @page "/"
+@using DataCatalog.Core.Models
+@using DataCatalog.Core.Services
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
 
-@* Every word on this page was approved by the Product Owner in request 001,
-   questions 2 and 4. It lives in PageText so the page and the tests cannot drift. *@
+@* The front page: every data source on the list, sorted by name (002 Q4, Q11). *@
 
 <PageTitle>@PageText.CatalogName</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
-    <MudText Typo="Typo.h3" HtmlTag="h1">@PageText.CatalogName</MudText>
-    <MudText Typo="Typo.body1" Class="mt-4">@PageText.RunningStatus</MudText>
-</MudContainer>
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-6">
+    <MudText Typo="Typo.h4" HtmlTag="h1">@PageText.CatalogName</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Href="/data-sources/add">@PageText.AddDataSource</MudButton>
+</MudStack>
+
+@if (_dataSources is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_dataSources.Count == 0)
+{
+    @* The wording from request 001, kept exactly (002 Q12). *@
+    <MudText Typo="Typo.body1">@PageText.RunningStatus</MudText>
+}
+else
+{
+    <MudTable Items="_dataSources" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>@PageText.LabelFor(CatalogField.Name)</MudTh>
+            <MudTh>@PageText.LabelFor(CatalogField.SourceSystem)</MudTh>
+            <MudTh>@PageText.LabelFor(CatalogField.Owner)</MudTh>
+            <MudTh>@PageText.LabelFor(CatalogField.Sensitivity)</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.Name)">
+                <MudLink Href="@($"/data-sources/{context.Id}")">@context.Name</MudLink>
+            </MudTd>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.SourceSystem)">@PageText.OrNotRecorded(context.SourceSystem)</MudTd>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.Owner)">@PageText.OrNotRecorded(context.Owner)</MudTd>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.Sensitivity)">@PageText.OrNotRecorded(context.Sensitivity)</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyList<CatalogEntry>? _dataSources;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dataSources = await Catalog.GetActiveAsync();
+    }
+}

@@ -45,3 +45,19 @@ dotnet test
 ## Known rough edges
 
 - `DataCatalog.Core.UnitTests` also holds the storage tests, which touch `DataCatalog.Infrastructure` and a real file on disk. Strictly those are not unit tests. They live there because splitting them into a fourth project buys nothing today — but the name promises slightly less than it delivers, and `docs/ARCHITECTURE.md` says so rather than pretending otherwise.
+
+---
+
+## Updated for request 002 — 2026-09-21
+
+106 tests: 71 rules, 22 pages, 13 browser.
+
+### Things that cost real time, written down so they cost nobody else any
+
+- **A Blazor Server page is drawn twice** — once as plain HTML, then again when the connection opens. A browser test is fast enough to click in between, on a page that cannot respond, and nothing happens. Tests wait for `#catalog-is-interactive` (see `MainLayout.razor`) before clicking.
+- **Moving between pages inside the catalog does not redraw the frame**, so that marker is already present from the previous page and proves nothing about the new one. After following a link, call `WaitUntilThisPageCanRespondAsync`.
+- **`MudButton` with `Href` renders a link, not a button.** `GetByRole(AriaRole.Button)` will not find it. Edit and "Add a data source" are links; Save, Remove and Put back are buttons.
+- **The confirmation box is drawn before the page content**, so with two buttons sharing a word neither `.First` nor `.Last` is safe. Scope to `GetByRole(AriaRole.Dialog)`.
+- **Running the built file directly does not serve MudBlazor's JavaScript.** The app then looks right, accepts typing, and dies on the first click. `RunningCatalogApp` uses `dotnet run`, the same as the Product Owner's start file.
+- **`RunningCatalogApp.WhatTheCatalogSaid()`** returns everything the app wrote. When a browser test fails for no visible reason, read that before guessing — it is how the crash behind "An unhandled error has occurred" was found.
+- **Watch out for assertions that pass for the wrong reason.** One check that a removed data source had left the list passed while sitting on a completely different page, where no such link existed either. It now waits for the list first.

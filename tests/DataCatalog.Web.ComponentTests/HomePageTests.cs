@@ -1,4 +1,5 @@
 using Bunit;
+using DataCatalog.Core.Services;
 using DataCatalog.Core.Text;
 using DataCatalog.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,11 @@ public class HomePageTests : BunitContext
     public HomePageTests()
     {
         Services.AddMudServices();
+
+        // Since request 002 the front page asks the catalog what to show. These tests
+        // still check exactly what they checked before: the wording of request 001.
+        Services.AddSingleton<ICatalogService>(new StubCatalogService());
+
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 

@@ -51,3 +51,33 @@ Nothing above it exists as far as this project is concerned. `DataCatalog.Infras
 ## Known rough edges
 
 - **`CatalogEntry.SourceSystem` is shown to people as "System".** A C# property called `System` would shadow the `System` namespace inside the class and cause confusing errors for whoever edits it next. The screen label stays "System"; only the code name differs. This is the one place where code and the Product Owner's word are deliberately not identical.
+
+---
+
+## Updated for request 002 — 2026-09-21
+
+### Added here
+
+| File | What it does |
+|---|---|
+| `Models/CatalogChange.cs` | One thing that happened to a data source. Never trimmed (`D-027`) |
+| `Models/CatalogChangeKind.cs` | Added, FieldChanged, Removed, PutBack |
+| `Models/CatalogField.cs` | The seven fields, as something the history can point at |
+| `Services/ICatalogService.cs` | Everything the catalog is allowed to do |
+| `Services/CatalogService.cs` | **The rules.** Names, duplicates, removal, history |
+| `Services/SaveResult.cs` | Why a save did or did not happen |
+| `CatalogNeedsHelpException.cs` | The file is readable but in a state this code will not change on its own |
+
+`CatalogEntry` gained `IsRemoved`. Removing hides; nothing here ever deletes an entry.
+
+### Why the history stores a field rather than a label
+
+`CatalogChange.Field` holds `CatalogField.Owner`, not the word "Owner". Labels are rendered through `PageText.LabelFor` at the moment of display, so if the Product Owner ever renames a field, its entire history renames with it instead of becoming a mixture of old and new wording.
+
+### Where the rules live
+
+All of them in `CatalogService`, none in a page and none in storage. That is what lets 71 tests cover the catalog's behavior without a browser or a database.
+
+### Wording marked DRAFTED
+
+`PageText` now distinguishes wording the Product Owner chose word for word from wording an agent drafted and they approved as part of a plan. Anything marked DRAFTED is a candidate for review if the catalog's voice is ever revisited.

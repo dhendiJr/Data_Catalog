@@ -1,0 +1,56 @@
+@page "/data-sources/removed"
+@using DataCatalog.Core.Models
+@using DataCatalog.Core.Services
+@inject ICatalogService Catalog
+
+@* Removed data sources, and putting them back. Nothing here was destroyed (002 Q8). *@
+
+<PageTitle>@PageText.RemovedDataSources</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-6">@PageText.RemovedDataSources</MudText>
+
+@if (_removed is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_removed.Count == 0)
+{
+    <MudText Typo="Typo.body1">@PageText.NothingHasBeenRemoved</MudText>
+}
+else
+{
+    <MudTable Items="_removed" Hover="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>@PageText.LabelFor(CatalogField.Name)</MudTh>
+            <MudTh>@PageText.LabelFor(CatalogField.SourceSystem)</MudTh>
+            <MudTh>@PageText.LabelFor(CatalogField.Owner)</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.Name)">
+                <MudLink Href="@($"/data-sources/{context.Id}")">@context.Name</MudLink>
+            </MudTd>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.SourceSystem)">@PageText.OrNotRecorded(context.SourceSystem)</MudTd>
+            <MudTd DataLabel="@PageText.LabelFor(CatalogField.Owner)">@PageText.OrNotRecorded(context.Owner)</MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           OnClick="@(() => PutBackAsync(context.Id))">@PageText.PutBack</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyList<CatalogEntry>? _removed;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _removed = await Catalog.GetRemovedAsync();
+
+    private async Task PutBackAsync(int id)
+    {
+        await Catalog.PutBackAsync(id);
+        await LoadAsync();
+    }
+}

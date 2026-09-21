@@ -1,10 +1,10 @@
 # Request 002 — Add, Remove and Display Data Sources
 
-**Status:** Building
+**Status:** Complete and merged
 **Opened:** 2026-09-21
 **Product Owner:** Product Owner
 **Branch:** `feature/002-add-remove-display-data-sources` — created after approval, left unmerged
-**Status of branch:** building
+**Status of branch:** merged into main on 2026-09-21, branch kept
 
 ---
 
@@ -178,20 +178,71 @@ Approving this plan also approves:
 
 ## What was built
 
-_Not started._
+- **The services layer** the architecture always described and had never had. Every rule — names, duplicates, removal, history — lives in `CatalogService`, testable with no browser and no database.
+- **Five pages** and the slide-out menu: the list, add, one data source with its history, edit, and removed.
+- **Recoverable removal** and **a change history** from the first entry onward.
+- **Migrations**, using the approved `dotnet-ef` tool, plus a safe upgrade path for the catalog file left behind by request 001.
+- Decisions `D-024` to `D-034`; architecture and all four area guides updated.
 
 ### Test results
 
 ```
-not run
+dotnet test
+
+Passed!  - Failed: 0, Passed: 71, Skipped: 0, Total: 71 - DataCatalog.Core.UnitTests.dll (net10.0)
+Passed!  - Failed: 0, Passed: 22, Skipped: 0, Total: 22 - DataCatalog.Web.ComponentTests.dll (net10.0)
+Passed!  - Failed: 0, Passed: 13, Skipped: 0, Total: 13 - DataCatalog.UiTests.dll (net10.0)
 ```
+
+106 tests, all passing. The blank-name rule was deliberately broken to confirm the tests could fail: seven failed, and all 71 passed again once restored.
 
 ### Anything that did not go to plan
 
+**Three real defects, all found by the browser tests:**
+
+1. **The whole catalog was static.** `App.razor` never set the render mode, so every button that does something — Save, Remove, Put back, Cancel — would have done nothing at all. Left off by the project template in request 001 and unnoticed because that request's one page had nothing to click.
+2. **The duplicate warning crashed the page.** What sits inside a MudBlazor alert is drawn later than the `@if` guarding it, so by the time it drew, the value it read had been cleared. Pressing "Save anyway" killed the page. The guard above it made this look impossible.
+3. **Saving wrapped navigation in a catch-all.** Blazor signals navigation by throwing, so a successful save could leave the person sitting on a form they had already saved.
+
+**Two things the tests themselves got wrong:**
+
+4. The browser tests ran the built file directly, which does not serve MudBlazor's JavaScript — the catalog looked fine, accepted typing, and died on the first click. They now start it with `dotnet run`, the same way the start file does.
+5. One assertion passed for the wrong reason: it checked a removed data source was gone from the list while sitting on a different page, where no such link existed either. Now it waits for the list first.
+
+**Four additions the plan did not describe:**
+
+6. **A marker in the app for the tests.** `#catalog-is-interactive` in the layout — empty, invisible, no runtime cost. A Blazor Server page is drawn twice, and a test is fast enough to click the first, unresponsive drawing.
+7. **An upgrade path for the request 001 catalog file**, which predates migrations. If provably empty it is rebuilt; if it holds anything, the catalog refuses to start rather than risk it.
+8. **Removed data sources do not count as duplicates.** The plan did not say. Something off the list is not one a person would find, so warning about it would confuse.
+9. **More drafted wording**: "Nothing has been removed." and the discard question's heading and text. Everything drafted rather than chosen is marked `DRAFTED` in `PageText`.
+
+**Two smaller notes:**
+
+10. The request 001 page test needed the catalog service registered, since the front page now asks for data. Its assertions are unchanged.
+11. `MudList` was replaced with plain text for the history — it brought keyboard handling nobody asked for and broke test teardown.
+
 ### Noticed while building
+
+Not acted on. Each would be its own request.
+
+- **The error and "page not found" pages still carry template wording** the Product Owner has never seen. So does the "An unhandled error has occurred" bar.
+- **The "Saved" message lingers across pages**, so it can still be on screen after moving on. Harmless, but it briefly looks like the new page saved something.
+- **Nothing limits how much text a field accepts.** Deliberate for now (Q13); worth revisiting once real descriptions exist.
 
 ---
 
 ## Definition of Done checklist
 
-_To be copied from `docs/DEFINITION_OF_DONE.md` when the work is complete._
+**Approval** — plan on disk with its approval block, logged rows 7 and 8, built what was approved. Every divergence is listed above rather than absorbed quietly.
+
+**Packages** — no new NuGet packages. The one new tool, `dotnet-ef` 10.0.12, is in the ledger with its approval.
+
+**The feature** — adding, listing, opening, editing, removing and putting back all work in a real browser; every error path in the plan behaves as described.
+
+**Tests** — 71 rules, 22 pages, 13 browser. Failure paths covered, not only happy ones. Tests were proven able to fail. No existing test was weakened; the one existing test that needed a changed setup kept its assertions.
+
+**Reporting** — real output shown, including the three defects found on the way.
+
+**Record** — `D-024` to `D-034` recorded; architecture updated including the new services layer; all four area guides updated with what cost real time.
+
+**Branch** — `feature/002-add-remove-display-data-sources`, unmerged, waiting on the Product Owner (`D-014`).

@@ -17,7 +17,10 @@
 </head>
 
 <body>
-    <Routes />
+    @* Without this the whole catalog renders as static HTML: every button that does
+       something - Save, Remove, Put back, Cancel - would simply not respond. The
+       project was created for Blazor Server (D-008); this is what turns it on. *@
+    <Routes @rendermode="InteractiveServer" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
