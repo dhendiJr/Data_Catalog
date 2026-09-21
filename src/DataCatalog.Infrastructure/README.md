@@ -48,8 +48,20 @@ Depends on `DataCatalog.Core` and on Entity Framework Core. `DataCatalog.Web` ne
 | D-019 | Entries live in a single SQLite file, read and written through Entity Framework Core |
 | D-020 | Missing file is created; damaged file refuses to start and is left untouched |
 
+## Reshaping the catalog file
+
+Settled in request 002 (`D-034`). The file's shape is changed through **migrations**, using the `dotnet-ef` tool that lives in the project folder (`dotnet-tools.json`). `CatalogDatabase.Prepare` calls `Migrate()` at startup, so a catalog holding real entries gains a new field without losing anything.
+
+To add a field:
+
+1. Add it to `CatalogEntry` in Core.
+2. Map it in `OnModelCreating` if it needs anything beyond the default.
+3. `dotnet dotnet-ef migrations add <WhatChanged> --project src/DataCatalog.Infrastructure --startup-project src/DataCatalog.Infrastructure`
+4. Read the generated migration before trusting it.
+5. It applies itself the next time the catalog starts.
+
+`DesignTimeCatalogDbContextFactory` exists so the tool never starts the web application — `Program.cs` catches every exception to show a plain-English message and would swallow the signal the tool uses to stop the app.
+
 ## Known rough edges
 
-- **The schema is created with `EnsureCreated`, not with migrations.** This is the honest consequence of a guardrail: generating migrations needs the `dotnet-ef` tool, and installing software is a hard stop that nobody has approved. `Microsoft.EntityFrameworkCore.Design` is installed and ready for when it is.
-
-  What this means in practice: **the first time a field is added to a catalog that already holds entries, the migration story has to be set up properly first** — install the tool with approval, and baseline the existing database. Doing that is a small job. Discovering it halfway through a field change is not, which is why it is written here.
+- **A catalog file created by request 001 predates migrations.** It has the tables but no record of which reshapings it has had, so migrating it fails with "table already exists" — which looks exactly like damage and is not. `UpgradeFileFromBeforeReshapingExisted` handles it: if such a file is **provably empty** its old table is dropped and the correct shape is built; if it holds anything at all, nothing is touched and the catalog refuses to start with an explanation. This code will not be the reason somebody loses data.

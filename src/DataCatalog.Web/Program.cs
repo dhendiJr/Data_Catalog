@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using DataCatalog.Core;
 using DataCatalog.Core.Abstractions;
+using DataCatalog.Core.Services;
 using DataCatalog.Core.Text;
 using DataCatalog.Infrastructure;
 using DataCatalog.Web.Components;
@@ -21,6 +22,8 @@ try
     builder.Services.AddDbContext<CatalogDbContext>(options =>
         options.UseSqlite($"Data Source={catalogFilePath}"));
     builder.Services.AddScoped<ICatalogRepository, SqliteCatalogRepository>();
+    builder.Services.AddScoped<ICatalogService, CatalogService>();
+    builder.Services.AddSingleton(TimeProvider.System);
 
     builder.Services.AddRazorComponents().AddInteractiveServerComponents();
     builder.Services.AddMudServices();

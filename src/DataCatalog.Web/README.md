@@ -63,3 +63,32 @@ The Product Owner double-clicks `Start Data Catalog.cmd` in the project folder. 
 
 - **`MudText` uses `HtmlTag`, not `Component`, to choose its HTML tag.** `Component="h1"` compiles, silently becomes a stray HTML attribute, and leaves the page with no heading at all. The component test caught it; it would not have been obvious by looking.
 - **`UseHttpsRedirection` was removed** from the template's `Program.cs`. The catalog listens on plain HTTP on localhost only, and the redirect had nowhere to send anyone.
+
+---
+
+## Updated for request 002 — 2026-09-21
+
+### The pages
+
+| File | Route | What it is |
+|---|---|---|
+| `Components/Pages/Home.razor` | `/` | The list: name, system, owner, sensitivity |
+| `Components/Pages/AddDataSource.razor` | `/data-sources/add` | The add form |
+| `Components/Pages/DataSourceDetail.razor` | `/data-sources/{Id:int}` | All seven fields, the history, Edit and Remove |
+| `Components/Pages/EditDataSource.razor` | `/data-sources/{Id:int}/edit` | The same form, filled in |
+| `Components/Pages/RemovedDataSources.razor` | `/data-sources/removed` | What has been removed, and Put back |
+| `Components/DataSourceForm.razor` | — | The one form both adding and editing use |
+
+The int constraint on `{Id:int}` is what keeps `/data-sources/removed` from being read as a data source called "removed".
+
+### Rules this area learned the hard way
+
+- **Never wrap navigation in a catch-all.** Blazor signals navigation by throwing. Guard the save, then navigate outside the `try` — otherwise a successful save leaves the person on a form they have already saved, with no explanation.
+- **Do not read possibly-null state inside another component's content.** What sits inside `<MudAlert>` is not drawn when the surrounding `@if` runs; MudAlert draws it later, by which point the value may be gone. Read it into a local inside the `@if` first. Getting this wrong crashed the page the instant "Save anyway" was pressed, and the `@if` above it looked like it made that impossible.
+- **`MudText` uses `HtmlTag`, not `Component`.** The wrong one compiles and silently becomes a stray HTML attribute.
+
+## Known rough edges
+
+- **`<Routes @rendermode="InteractiveServer" />` in `App.razor` is load-bearing.** Without it the whole catalog is static HTML: every button that does something simply does not respond. The template left it off, and request 001 never noticed because its one page had nothing to click.
+- **`#catalog-is-interactive` in `MainLayout.razor` exists for the browser tests.** Empty, invisible, no runtime cost. See `tests/README.md` for why it is needed.
+- **The catalog runs in Development.** `dotnet run` picks that up from `launchSettings.json`, which is also what serves MudBlazor's own stylesheet and script. Running the built file directly does not, and the catalog then dies on the first click.

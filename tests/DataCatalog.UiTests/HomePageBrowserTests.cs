@@ -56,7 +56,7 @@ public class HomePageBrowserTests : IClassFixture<RunningCatalogApp>, IAsyncLife
     {
         var page = await OpenTheCatalogAsync();
 
-        var heading = page.GetByRole(AriaRole.Heading, new() { Name = PageText.CatalogName });
+        var heading = page.GetByRole(AriaRole.Heading, new() { Name = PageText.CatalogName, Level = 1 });
 
         await Assertions.Expect(heading).ToBeVisibleAsync();
     }

@@ -43,19 +43,22 @@ Start Data Catalog.cmd         what the Product Owner double-clicks
 datacatalog.db                 the catalog file - their data, kept out of version control
 src/
   DataCatalog.Core/            models, rules, interfaces - no UI, no storage, no packages
-    Models/                    CatalogEntry: the seven fields of D-010
+    Models/                    CatalogEntry (D-010), CatalogChange, CatalogField
     Abstractions/              ICatalogRepository
-    Text/                      wording the Product Owner approved, word for word
+    Services/                  ICatalogService, CatalogService - THE RULES
+    Text/                      wording the Product Owner approved
     README.md
   DataCatalog.Infrastructure/  the catalog file and how it is read and written
-    CatalogDbContext.cs        the shape of the file
+    CatalogDbContext.cs        the shape of the file: entries and their history
     SqliteCatalogRepository.cs implements ICatalogRepository
-    CatalogDatabase.cs         missing file versus damaged file, at startup
+    CatalogDatabase.cs         missing, damaged, and reshaping, at startup
+    Migrations/                how the file's shape has changed over time
     README.md
   DataCatalog.Web/             the Blazor Server app
     Components/
-      Layout/
-      Pages/                   Home.razor - the only page today
+      Layout/                  the frame and the slide-out menu
+      Pages/                   the list, add, one data source, edit, removed
+      DataSourceForm.razor     the one form adding and editing share
     Program.cs                 startup, dependency injection, every failure path
     README.md
 tests/
@@ -91,14 +94,22 @@ At startup (`D-020`):
 
 Today nothing is required and nothing is validated. Validation is a rule for a later request, and the tests record what is true now rather than what someone assumes.
 
+## The services layer, added in request 002
+
+`CatalogService` holds every rule: a data source must have a name, a duplicate name warns but does not block, removing hides rather than destroys, and every change is recorded. Pages ask it; storage obeys it; neither decides anything.
+
+This is what makes 71 tests able to cover the catalog's behavior with no browser and no database — and it is why adding a second way in later (an import, say) cannot accidentally skip the rules.
+
+The history is written by the service in the same operation as the change, so a change that is saved but not recorded would take a deliberate effort to produce.
+
 ## Still open — do not assume
 
 | Open question | Why it matters |
 |---|---|
-| **How the edit history is kept** (required by `D-005`) | Nothing records changes yet. The storage has room for it; the shape is undecided |
 | **The district's sensitivity levels** | Stored as free text until then (`D-018`) |
-| **Whether duplicate names are allowed** | Today they are, and a test records that. Nobody has decided they should be |
-| **Migrations** | The schema is created directly rather than through migrations, because generating them needs a tool nobody has approved installing. See `src/DataCatalog.Infrastructure/README.md` |
+| **Warning two people who edit at once** | Today the last save wins silently (`D-028`). Safe on one computer because the history keeps the overwritten values. **Revisit before any move to a server** |
+| **Whether duplicate names should be blocked** | Today they warn and are allowed (`D-025`) |
+| **Search and filtering** | Deferred (`D-033`) until there is enough to search |
 
 Record each answer in `docs/DECISIONS.md` and update this file in the same change.
 

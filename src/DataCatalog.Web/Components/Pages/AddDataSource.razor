@@ -1,0 +1,69 @@
+@page "/data-sources/add"
+@using DataCatalog.Core.Models
+@using DataCatalog.Core.Services
+@inject ICatalogService Catalog
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+@* Adding a data source. Only the name is needed (002 Q5). *@
+
+<PageTitle>@PageText.AddDataSource</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" Class="mb-6">@PageText.AddDataSource</MudText>
+
+<DataSourceForm Entry="_entry"
+                SaveButtonText="@PageText.Save"
+                NameError="@_nameError"
+                DuplicateOf="_duplicateOf"
+                SaveFailure="@_saveFailure"
+                OnSave="() => SaveAsync(saveAnyway: false)"
+                OnSaveAnyway="() => SaveAsync(saveAnyway: true)"
+                OnCancel="GoBackToTheList" />
+
+@code {
+    private readonly CatalogEntry _entry = new();
+
+    private string? _nameError;
+    private CatalogEntry? _duplicateOf;
+    private string? _saveFailure;
+
+    private async Task SaveAsync(bool saveAnyway)
+    {
+        _nameError = null;
+        _duplicateOf = null;
+        _saveFailure = null;
+
+        SaveResult result;
+
+        // Only the saving is guarded. Moving on to the next page must sit outside this,
+        // because Blazor signals navigation by throwing, and a catch-all here would
+        // swallow it and leave the person sitting on a form they have already saved.
+        try
+        {
+            result = await Catalog.AddAsync(_entry, saveAnyway);
+        }
+        catch (Exception failure)
+        {
+            // Nothing typed is cleared: the person can press Save again once whatever
+            // went wrong has cleared (002 Q19).
+            _saveFailure = failure.Message;
+            return;
+        }
+
+        switch (result.Problem)
+        {
+            case SaveProblem.NameMissing:
+                _nameError = PageText.NameRequired;
+                return;
+
+            case SaveProblem.DuplicateName:
+                _duplicateOf = result.ExistingWithSameName;
+                return;
+        }
+
+        Snackbar.Add(PageText.Saved, Severity.Success);
+        GoBackToTheList();
+    }
+
+    private void GoBackToTheList() => Navigation.NavigateTo("/");
+}

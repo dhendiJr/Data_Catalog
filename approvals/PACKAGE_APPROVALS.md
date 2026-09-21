@@ -52,3 +52,15 @@ Listed because the policy counts them, not because anything references them dire
 ## Not installed, and why it matters
 
 `dotnet-ef`, the tool that generates migrations, is **not** installed. Installing software is a hard stop (`docs/GUARDRAILS.md`) and nobody has approved it. The consequence is recorded in `src/DataCatalog.Infrastructure/README.md`: the first field added to a catalog that already holds entries needs that tool approved and the database baselined first.
+
+## Approved tools
+
+Not NuGet packages installed into a project, but software the project carries and uses.
+
+| Tool | Version | Where | What it does, in plain English | Approved by | Date | Request |
+|---|---|---|---|---|---|---|
+| dotnet-ef | 10.0.12 | `dotnet-tools.json` in the project folder | Works out how to reshape the catalog file when fields are added, so entries already in it are not lost | Product Owner | 2026-09-21 | 002, question 18 |
+
+This was an explicit exception to the hard stop on installing software (`docs/GUARDRAILS.md`). It lives inside the project folder, not on the machine, and comes back with `dotnet tool restore`.
+
+**Note on where it lives:** .NET 10 writes the manifest to `dotnet-tools.json` at the project root rather than the `.config/dotnet-tools.json` older guidance describes.
