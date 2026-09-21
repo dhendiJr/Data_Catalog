@@ -1,10 +1,10 @@
 # Request 001 — Project Setup
 
-**Status:** Complete - awaiting merge decision
+**Status:** Complete and merged
 **Opened:** 2026-09-21
 **Product Owner:** Product Owner
 **Branch:** `feature/001-project-setup` — created after approval, left unmerged
-**Status of branch:** awaiting merge decision
+**Status of branch:** merged into main on 2026-09-21, branch kept
 
 ---
 
@@ -51,6 +51,7 @@ Checked before asking, so these are facts rather than questions:
 | 12 | The seven fields (D-010) include sensitivity. How is it stored before the district's levels are known? | Free text for now. The actual list of levels is settled when the screen for picking one is built — cheap to change while the catalog is empty, expensive once entries exist. | 2026-09-21 |
 | 13 | What exact words should the two failure messages use? | The drafted wording, used exactly as written, including the "do not delete this file" warning and the file location. Tests check for these words. | 2026-09-21 |
 | 14 | Which add-on is used to talk to the database file? | Entity Framework Core — the one that manages reshaping the data file when fields are added later. More machinery than needed today, but hand-written schema changes on a catalog that already holds entries is where real data gets lost. | 2026-09-21 |
+| 15 | Asked after building: is the wording I drafted without approval acceptable? | **Yes — "the wording is fine."** Covers the generic "could not start" message and the two console lines shown while the catalog runs. These are now approved wording and are treated like the rest (D-023). | 2026-09-21 |
 
 ---
 
@@ -216,7 +217,7 @@ Passed!  - Failed: 0, Passed:  4, Skipped: 0, Total:  4 - DataCatalog.UiTests.dl
 2. **One fewer package than planned.** `Microsoft.Playwright.NUnit/.Xunit` turned out to be unnecessary — plain `Microsoft.Playwright` with an xUnit fixture works. Not installed.
 3. **Two tests failed during the work.** One was the test's own plumbing (SQLite keeps the file locked after disposal). The other was a real defect the test caught: `MudText Component="h1"` compiles but silently becomes a stray HTML attribute, leaving the page with no heading. Fixed with `HtmlTag="h1"`. No test was weakened.
 4. **Migrations are not set up.** Generating them needs the `dotnet-ef` tool, and installing software is a hard stop nobody approved. The schema is created directly instead. `Microsoft.EntityFrameworkCore.Design` is installed and ready. Consequence recorded in `src/DataCatalog.Infrastructure/README.md`.
-5. **Wording written without explicit approval** — needs confirming:
+5. **Wording written without explicit approval** — since approved by the Product Owner on 2026-09-21 ("the wording is fine"), see question 15 and `D-023`:
    - the generic "could not start" message, for failures other than the two that were worded at Q13
    - two console lines while running: "Data Catalog is running at <address>" and "Close this window to stop it."
 6. **`UseHttpsRedirection` was removed** from the template's startup code. The catalog serves plain HTTP on localhost only, so the redirect had nowhere to send anyone.

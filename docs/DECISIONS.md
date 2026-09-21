@@ -32,6 +32,7 @@ Add a new entry every time the PO answers a question that will matter again. Con
 | D-020 | 2026-09-21 | What happens when the catalog file is missing or damaged? | **Missing** - create a new empty one and start normally; this is also the first run. **Damaged** - refuse to start, say where the file is, warn against deleting it, and leave it byte for byte untouched. A test asserts the bytes are unchanged. | Active |
 | D-021 | 2026-09-21 | How does the Product Owner start the catalog? | By double-clicking `Start Data Catalog.cmd` in the project folder. A console window stays open while it runs and closing it stops the catalog. The browser opens by itself. On failure the window stays open with a plain-English message and the technical detail underneath. | Active |
 | D-022 | 2026-09-21 | Is anything validated or required today? | No. Nothing is required, nothing is length-limited, and duplicate names are allowed. Tests record this so that changing it later is a deliberate, approved act rather than a silent one. | Active |
+| D-023 | 2026-09-21 | Is the wording drafted during request 001 without prior approval acceptable? | Yes. The generic "could not start" message and the two console lines shown while the catalog runs are approved wording, on the same footing as everything else: they may not be changed without asking. The rule stands - wording is normally agreed before it is written, and this was flagged rather than absorbed. | Active |
 
 ---
 
