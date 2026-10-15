@@ -2,7 +2,15 @@
 
 A searchable directory of the district's data sources — which systems exist, what is in each, who owns them, and who to ask.
 
-**Nothing has been built yet.** This folder currently holds the rules that any AI agent must follow when building it.
+You can add a data source, see them all in a list, open one to read everything about it, correct it, and remove it. Removing hides rather than destroys, so anything taken off the list can be put back. Every change is recorded with the date and what it changed from.
+
+It runs on one computer, reached in a browser, and has no logins — so anyone who can reach it can edit it. That is deliberate (see the decisions below), and it is why the change history exists.
+
+Built with .NET 10, Blazor Server and MudBlazor, and covered by 106 automated tests.
+
+**What it is not:** a field-level data dictionary, an access-request system, or a place where the data itself lives. It records *where* data is and who to ask about it.
+
+Alongside the software, this repository holds something less usual: the complete rulebook an AI agent must follow to work on it, and the full record of every request — each question asked, each answer given, and the written approval before any code was written. `requests/` and `docs/` are as much the point of this project as `src/`.
 
 ## If you are an AI agent
 
