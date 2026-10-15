@@ -19,5 +19,7 @@ Add a row the moment approval is given — before starting the work, not after f
 | 9 | 2026-09-21 | Merging `feature/002-add-remove-display-data-sources` into `main` | Guardrail | Product Owner | "merge it" | `requests/002-add-remove-display-data-sources.md` |
 | 10 | 2026-10-15 | Request 003 plan, version 1 — publish the project to a public GitHub repository under the MIT licence, copyright California Schools Information Services (CSIS) | Plan | Product Owner | "appoved" (typing slip for approved) | `requests/003-publish-to-github.md` |
 | 11 | 2026-10-15 | Adding a git remote, pushing to it, and publishing this project outside this computer — three hard stops, crossed knowingly | Guardrail | Product Owner | Approved as part of the request 003 plan | `requests/003-publish-to-github.md` |
+| 12 | 2026-10-15 | Keeping the repository on the `dhendiJr` account rather than the work account, after two accounts were found | Guardrail | Product Owner | Chose "dhendiJr - where I already made it" | `docs/DECISIONS.md` D-036 |
+| 13 | 2026-10-15 | Merging `feature/003-publish-to-github` into `main` and pushing again, so the licence and corrected README are public | Guardrail | Product Owner | Chose "Yes, merge and push" | `requests/003-publish-to-github.md` |
 
 **Types:** `Plan` · `Packages` · `Guardrail` · `Setup`
