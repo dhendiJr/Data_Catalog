@@ -1,10 +1,10 @@
 # Request 003 — Publish to GitHub
 
-**Status:** Building
+**Status:** Complete and merged
 **Opened:** 2026-10-15
 **Product Owner:** Product Owner
 **Branch:** `feature/003-publish-to-github` — created after approval, left unmerged
-**Status of branch:** building
+**Status of branch:** merged into main and pushed on 2026-10-15, branch kept
 
 ---
 
@@ -147,17 +147,48 @@ The repository address was not supplied with the approval, so everything up to t
 
 ## What was built
 
-_Not started._
+- A **public** repository at `https://github.com/dhendiJr/Data_Catalog`, holding the project and its full history
+- `LICENSE` — MIT, `Copyright (c) 2026 California Schools Information Services (CSIS)`
+- The README's opening corrected; it had claimed since September that nothing was built
+- `.claude/launch.json` published, so anyone cloning can start the catalog
+- `D-035` (publish) and `D-036` (which account) recorded
 
 ### Test results
 
 ```
-not run
+dotnet test
+
+Passed!  - Failed: 0, Passed: 71, Skipped: 0, Total: 71 - DataCatalog.Core.UnitTests.dll
+Passed!  - Failed: 0, Passed: 22, Skipped: 0, Total: 22 - DataCatalog.Web.ComponentTests.dll
+Passed!  - Failed: 0, Passed: 13, Skipped: 0, Total: 13 - DataCatalog.UiTests.dll
 ```
+
+**Pre-publish check, before anything left this computer:**
+
+| Check | Result |
+|---|---|
+| `datacatalog.db` in any commit, ever | No — district entries are not published |
+| Credentials, keys, tokens in tracked files | None |
+| Emails in file content | `dhenderson@fcmat.org` only, which the PO accepted |
+| Files published | 92 |
 
 ### Anything that did not go to plan
 
+1. **The plan had the order wrong, and it showed.** It said to push `main`, and also that visitors would see the licence and corrected README — but those were committed on this request's branch, and `D-014` keeps a branch unmerged until the PO asks. So the first push put the project public **with no licence and the stale README**. The PO then approved merging and pushing again. The flaw was mine, in the plan, and the browser check caught it rather than anyone noticing later.
+2. **A rule break of my own.** `git add -A` swept `.claude/launch.json` into the approval-records commit on `main`, instead of onto this request's branch — `P29`. The content was what the PO approved; it landed one commit early on the wrong branch. Offered to rewrite history to fix it; the PO said leave it.
+3. **Two GitHub accounts, discovered the hard way.** The repository was created under `dhendiJr` because that is who `gh` is signed in as. The first push was then refused — `Permission to dhendiJr/Data_Catalog.git denied to dhendersonfcmat` — because the saved Git credentials belong to a different account. Nothing had been published at that point. The PO chose to keep it on `dhendiJr` (`D-036`).
+4. **The push protocol had to change.** `gh` configured Git for SSH; the HTTPS credential helper authenticates as the other account. The remote was set to SSH, which authenticates correctly with a key already registered on `dhendiJr`. No configuration outside this project was touched.
+5. **The PO installed the GitHub CLI themselves.** Installing software is a hard stop for an agent; this was their own action on their own machine, and it is what made creating the repository possible at all.
+6. **The accepted email appears in file content as well.** `dhenderson@fcmat.org` is in this request record because I wrote it there while reporting the pre-publish check, not only in commit metadata.
+
 ### Noticed while building
+
+Not acted on.
+
+- **`gh` is not on this session's shell PATH** and has to be called by its full path, `C:\Program Files\GitHub CLI\gh.exe`. A newly opened terminal will have it.
+- **The repository has no description or topics**, so it is unlabelled to anyone browsing GitHub.
+- **No automated building or testing on GitHub.** The 106 tests run only on this computer, so nothing would catch a broken commit after a push.
+- **A `dhendersonfcmat` account exists.** If this work should ever sit under the work account instead, moving it is its own request.
 
 ---
 
